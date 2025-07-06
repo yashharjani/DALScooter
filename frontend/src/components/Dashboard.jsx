@@ -9,14 +9,15 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("userEmail")
+    localStorage.removeItem("userGroup")
     navigate("/login")
   }
 
   const quickActions = [
     { title: "Book a Ride", icon: Calendar, link: "/booking", color: "from-blue-500 to-cyan-400" },
     { title: "Give Feedback", icon: Star, link: "/feedback", color: "from-purple-500 to-pink-400" },
-    { title: "Franchise Panel", icon: Settings, link: "/franchise", color: "from-green-500 to-emerald-400" },
-    { title: "Admin Analytics", icon: BarChart3, link: "/admin", color: "from-orange-500 to-red-400" },
+    // { title: "Franchise Panel", icon: Settings, link: "/franchise", color: "from-green-500 to-emerald-400" },
+    // { title: "Admin Analytics", icon: BarChart3, link: "/admin", color: "from-orange-500 to-red-400" },
   ]
 
   return (
@@ -40,12 +41,21 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Notification Banner */}
+      <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert">
+        <p className="font-bold">Welcome!</p>
+        <p>You have successfully signed in as a Registered User.</p>
+      </div>
+
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Welcome Section */}
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-8 border border-white/20">
           <h2 className="text-3xl font-bold text-slate-800 mb-4">Welcome to DALScooter</h2>
           <p className="text-lg text-slate-600 mb-2">
             You are logged in as: <span className="font-semibold text-indigo-600">{email}</span>
+            <span className="ml-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium">
+              Registered User
+            </span>
           </p>
           <p className="text-slate-600">
             Your eco-friendly transportation solution is ready. Choose from our available services below.
@@ -98,7 +108,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-slate-700">Multi-factor authentication</span>
+                <span className="text-slate-700">Multi-factor authentication enabled</span>
               </div>
             </div>
           </div>

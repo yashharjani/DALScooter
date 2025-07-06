@@ -8,6 +8,8 @@ import Feedback from "./components/Feedback"
 import FranchiseManagement from "./components/FranchiseManagement"
 import AdminAnalytics from "./components/AdminAnalytics"
 import VirtualAssistant from "./components/VirtualAssistant"
+import AdminDashboard from "./components/AdminDashboard"
+import { getUserGroup } from "./utils/auth"
 
 export default function App() {
   const location = useLocation()
@@ -24,7 +26,10 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/confirm" element={<ConfirmAccount />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+          path="/dashboard"
+          element={getUserGroup().includes("BikeFranchise") ? <AdminDashboard /> : <Dashboard />}
+          />
           <Route path="/booking" element={<Booking />} />
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/franchise" element={<FranchiseManagement />} />
