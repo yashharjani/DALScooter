@@ -1,61 +1,37 @@
-// import React from 'react';
-// import { Routes, Route, Link } from 'react-router-dom';
-// import Register from './components/Register';
-// import Login from './components/Login';
-// import ConfirmAccount from './components/ConfirmAccount';
-// import Dashboard from './components/Dashboard';
-
-// export default function App() {
-//   return (
-//     <div style={{ padding: '2rem' }}>
-//       <h1>DALScooter Auth</h1>
-//       <nav style={{ marginBottom: '1rem' }}>
-//         <Link to="/login"><button>Login</button></Link>
-//         <Link to="/register"><button>Register</button></Link>
-//         <Link to="/confirm"><button>Confirm Email</button></Link>
-//         <Link to="/dashboard"><button>Dashboard</button></Link>
-//       </nav>
-
-//       <Routes>
-//         <Route path="/" element={<Login />} />
-//         <Route path="/login" element={<Login />} />
-//         <Route path="/register" element={<Register />} />
-//         <Route path="/confirm" element={<ConfirmAccount />} />
-//         <Route path="/dashboard" element={<Dashboard />} />
-//       </Routes>
-//     </div>
-//   );
-// }
-
-import React from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import Register from './components/Register';
-import Login from './components/Login';
-import ConfirmAccount from './components/ConfirmAccount';
-import Dashboard from './components/Dashboard';
+import { Routes, Route, useLocation } from "react-router-dom"
+import Register from "./components/Register"
+import Login from "./components/Login"
+import ConfirmAccount from "./components/ConfirmAccount"
+import Dashboard from "./components/Dashboard"
+import Booking from "./components/Booking"
+import Feedback from "./components/Feedback"
+import FranchiseManagement from "./components/FranchiseManagement"
+import AdminAnalytics from "./components/AdminAnalytics"
+import VirtualAssistant from "./components/VirtualAssistant"
 
 export default function App() {
-  const location = useLocation();
-  const hideNav = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/confirm';
-  const hideHeading = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/confirm';
+  const location = useLocation()
+  const hideNav =
+    location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/confirm"
+  const hideHeading =
+    location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/confirm"
+
   return (
-    <div style={{ padding: '2rem' }}>
-      {/* {!hideHeading && <h1>DALScooter Auth</h1>}
-      {!hideNav && (
-        <nav style={{ marginBottom: '1rem' }}>
-          <Link to="/login"><button>Login</button></Link>
-          <Link to="/register"><button>Register</button></Link>
-          <Link to="/confirm"><button>Confirm Email</button></Link>
-          <Link to="/dashboard"><button>Dashboard</button></Link>
-        </nav>
-      )} */}
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/confirm" element={<ConfirmAccount />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="p-8">
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/confirm" element={<ConfirmAccount />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/booking" element={<Booking />} />
+          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/franchise" element={<FranchiseManagement />} />
+          <Route path="/admin" element={<AdminAnalytics />} />
+        </Routes>
+      </div>
+      <VirtualAssistant />
     </div>
-  );
+  )
 }
