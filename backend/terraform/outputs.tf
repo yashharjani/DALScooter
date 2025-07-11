@@ -18,6 +18,6 @@ output "amplify_app_id" {
   value = module.amplify_deploy.amplify_app_id
 }
 
-# output "amplify_branch_url" {
-#   value = module.amplify_deploy.amplify_branch_url
-# }
+output "bike_crud_api_endpoint" {
+  value = module.bike_module.bike_api_gateway_endpoint
+}

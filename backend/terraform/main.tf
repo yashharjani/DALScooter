@@ -22,6 +22,7 @@ module "amplify_deploy" {
   auth_api_gateway_endpoint = module.auth_module.api_gateway_endpoint
   auth_user_pool_id         = module.auth_module.user_pool_id
   auth_user_pool_client_id  = module.auth_module.user_pool_client_id
+  bike_crud_api             = module.bike_module.bike_api_gateway_endpoint
 }
 
 # Bike Module (Admin & Guest CRUD access)

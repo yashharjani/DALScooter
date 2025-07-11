@@ -23,3 +23,8 @@ variable "auth_user_pool_client_id" {
   description = "Cognito User Pool Client ID"
   type        = string
 }
+
+variable "bike_crud_api" {
+  description = "Bike CRUD API"
+  type        = string
+}
