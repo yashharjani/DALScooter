@@ -1,4 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom"
+import Home from "./components/Home"
 import Register from "./components/Register"
 import Login from "./components/Login"
 import ConfirmAccount from "./components/ConfirmAccount"
@@ -13,30 +14,31 @@ import { getUserGroup } from "./utils/auth"
 
 export default function App() {
   const location = useLocation()
-  const hideNav =
-    location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/confirm"
-  const hideHeading =
-    location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/confirm"
+  const hideVirtualAssistant =
+    location.pathname === "/" ||
+    location.pathname === "/home" ||
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/confirm"
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="p-8">
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/confirm" element={<ConfirmAccount />} />
-          <Route
+    <div className="min-h-screen">
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/confirm" element={<ConfirmAccount />} />
+        <Route
           path="/dashboard"
           element={getUserGroup().includes("BikeFranchise") ? <AdminDashboard /> : <Dashboard />}
-          />
-          <Route path="/booking" element={<Booking />} />
-          <Route path="/feedback" element={<Feedback />} />
-          <Route path="/franchise" element={<FranchiseManagement />} />
-          <Route path="/admin" element={<AdminAnalytics />} />
-        </Routes>
-      </div>
-      <VirtualAssistant />
+        />
+        <Route path="/booking" element={<Booking />} />
+        <Route path="/feedback" element={<Feedback />} />
+        <Route path="/franchise" element={<FranchiseManagement />} />
+        <Route path="/admin" element={<AdminAnalytics />} />
+      </Routes>
+      {!hideVirtualAssistant && <VirtualAssistant />}
     </div>
   )
 }

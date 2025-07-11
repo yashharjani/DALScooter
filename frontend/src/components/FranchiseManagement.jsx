@@ -1,44 +1,29 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Plus, Edit, Trash2, Settings, DollarSign, Battery } from "lucide-react"
 
 export default function FranchiseManagement() {
   const [activeTab, setActiveTab] = useState("vehicles")
   const [showAddForm, setShowAddForm] = useState(false)
-  const [vehicles, setVehicles] = useState([
-    {
-      id: 1,
-      type: "eBike",
-      model: "Urban Cruiser",
-      accessCode: "EB001",
-      batteryLife: "85%",
-      hourlyRate: 12,
-      features: ["GPS", "LED Lights"],
-      discount: "10%",
-    },
-    {
-      id: 2,
-      type: "Gyroscooter",
-      model: "Balance Pro",
-      accessCode: "GS002",
-      batteryLife: "92%",
-      hourlyRate: 15,
-      features: ["Self-balancing", "Bluetooth"],
-      discount: "5%",
-    },
-    {
-      id: 3,
-      type: "Segway",
-      model: "City Glider",
-      accessCode: "SW003",
-      batteryLife: "78%",
-      hourlyRate: 18,
-      features: ["Remote Control", "Anti-theft"],
-      discount: "15%",
-    },
-  ])
+  const [vehicles, setVehicles] = useState([])
+
+  const API_BASE = import.meta.env.VITE_BIKE_CRUD_API
+
+  const fetchVehicles = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/bikes`)
+      const data = await res.json()
+      setVehicles(data)
+    } catch (error) {
+      console.error("Error fetching vehicles:", error)
+    }
+  }
+
+  useEffect(() => {
+    fetchVehicles()
+  }, [])
 
   const [newVehicle, setNewVehicle] = useState({
     type: "",
@@ -50,20 +35,76 @@ export default function FranchiseManagement() {
     discount: "",
   })
 
-  const handleAddVehicle = (e) => {
+  const [editId, setEditId] = useState(null)
+  const [editData, setEditData] = useState({})
+
+  const handleAddVehicle = async (e) => {
     e.preventDefault()
-    const vehicle = {
-      ...newVehicle,
-      id: vehicles.length + 1,
-      hourlyRate: Number.parseFloat(newVehicle.hourlyRate),
+    try {
+      const body = {
+        ...newVehicle,
+        hourlyRate: Number.parseFloat(newVehicle.hourlyRate),
+        features: newVehicle.features,
+        createdBy: localStorage.getItem("userEmail"),
+        createdAt: new Date().toISOString(),
+      }
+      const res = await fetch(`${API_BASE}/bikes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.getItem("token"),
+        },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        setNewVehicle({
+          type: "",
+          model: "",
+          accessCode: "",
+          batteryLife: "",
+          hourlyRate: "",
+          features: [],
+          discount: "",
+        })
+        setShowAddForm(false)
+        fetchVehicles()
+      }
+    } catch (error) {
+      console.error("Error adding vehicle:", error)
     }
-    setVehicles([...vehicles, vehicle])
-    setNewVehicle({ type: "", model: "", accessCode: "", batteryLife: "", hourlyRate: "", features: [], discount: "" })
-    setShowAddForm(false)
   }
 
-  const handleDeleteVehicle = (id) => {
-    setVehicles(vehicles.filter((v) => v.id !== id))
+  const handleDeleteVehicle = async (bikeId) => {
+    try {
+      const res = await fetch(`${API_BASE}/bikes/${bikeId}`, {
+        method: "DELETE",
+        headers: { Authorization: localStorage.getItem("token") },
+      })
+      if (res.ok) fetchVehicles()
+    } catch (error) {
+      console.error("Error deleting vehicle:", error)
+    }
+  }
+
+  const handleEditVehicle = async (e) => {
+    e.preventDefault()
+    try {
+      const res = await fetch(`${API_BASE}/bikes/${editId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.getItem("token"),
+        },
+        body: JSON.stringify(editData),
+      })
+      if (res.ok) {
+        setEditId(null)
+        setEditData({})
+        fetchVehicles()
+      }
+    } catch (error) {
+      console.error("Error updating vehicle:", error)
+    }
   }
 
   return (
@@ -127,53 +168,146 @@ export default function FranchiseManagement() {
               {showAddForm && (
                 <div className="bg-slate-50/50 rounded-xl p-6 mb-6 border border-slate-200/50">
                   <h3 className="text-lg font-semibold text-slate-800 mb-4">Add New Vehicle</h3>
-                  <form onSubmit={handleAddVehicle} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <select
-                      value={newVehicle.type}
-                      onChange={(e) => setNewVehicle({ ...newVehicle, type: e.target.value })}
-                      className="px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
-                      required
-                    >
-                      <option value="">Select Type</option>
-                      <option value="eBike">eBike</option>
-                      <option value="Gyroscooter">Gyroscooter</option>
-                      <option value="Segway">Segway</option>
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Model Name"
-                      value={newVehicle.model}
-                      onChange={(e) => setNewVehicle({ ...newVehicle, model: e.target.value })}
-                      className="px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Access Code"
-                      value={newVehicle.accessCode}
-                      onChange={(e) => setNewVehicle({ ...newVehicle, accessCode: e.target.value })}
-                      className="px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
-                      required
-                    />
-                    <input
-                      type="number"
-                      placeholder="Hourly Rate ($)"
-                      value={newVehicle.hourlyRate}
-                      onChange={(e) => setNewVehicle({ ...newVehicle, hourlyRate: e.target.value })}
-                      className="px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
-                      required
-                    />
-                    <div className="md:col-span-2 flex space-x-4">
+                  <form onSubmit={handleAddVehicle} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Vehicle Type *</label>
+                        <select
+                          value={newVehicle.type}
+                          onChange={(e) => setNewVehicle({ ...newVehicle, type: e.target.value })}
+                          className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
+                          required
+                        >
+                          <option value="">Select Type</option>
+                          <option value="eBike">eBike</option>
+                          <option value="Gyroscooter">Gyroscooter</option>
+                          <option value="Segway">Segway</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Model Name *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., Urban Cruiser"
+                          value={newVehicle.model}
+                          onChange={(e) => setNewVehicle({ ...newVehicle, model: e.target.value })}
+                          className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Access Code *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., EB001"
+                          value={newVehicle.accessCode}
+                          onChange={(e) => setNewVehicle({ ...newVehicle, accessCode: e.target.value })}
+                          className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Battery Life *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., 20h"
+                          value={newVehicle.batteryLife}
+                          onChange={(e) => setNewVehicle({ ...newVehicle, batteryLife: e.target.value })}
+                          className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Hourly Rate ($) *</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="e.g., 12.00"
+                          value={newVehicle.hourlyRate}
+                          onChange={(e) => setNewVehicle({ ...newVehicle, hourlyRate: e.target.value })}
+                          className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Discount (%)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., 10"
+                          value={newVehicle.discount}
+                          onChange={(e) => setNewVehicle({ ...newVehicle, discount: e.target.value })}
+                          className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white/80 focus:border-indigo-500 focus:outline-none"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-slate-700 mb-3">Features</label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {["Height Adjustment", "Bluetooth", "GPS", "Shock Absorbers"].map((feature) => (
+                            <label key={feature} className="flex items-center space-x-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={newVehicle.features.includes(feature)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setNewVehicle({ ...newVehicle, features: [...newVehicle.features, feature] })
+                                  } else {
+                                    setNewVehicle({
+                                      ...newVehicle,
+                                      features: newVehicle.features.filter((f) => f !== feature),
+                                    })
+                                  }
+                                }}
+                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                              />
+                              <span className="text-sm text-slate-700">{feature}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-3">Features</label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3"> */}
+                        {/*{["Height Adjustment", "Bluetooth", "GPS", "Shock Absorbers"].map((feature) => (*/}
+                        {/*  <label key={feature} className="flex items-center space-x-2 cursor-pointer">*/}
+                        {/*    <input*/}
+                        {/*      type="checkbox"*/}
+                        {/*      checked={newVehicle.features.includes(feature)}*/}
+                        {/*      onChange={(e) => {*/}
+                        {/*        if (e.target.checked) {*/}
+                        {/*          setNewVehicle({ ...newVehicle, features: [...newVehicle.features, feature] })*/}
+                        {/*        } else {*/}
+                        {/*          setNewVehicle({*/}
+                        {/*            ...newVehicle,*/}
+                        {/*            features: newVehicle.features.filter((f) => f !== feature),*/}
+                        {/*          })*/}
+                        {/*        }*/}
+                        {/*      }}*/}
+                        {/*      className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"*/}
+                        {/*    />*/}
+                        {/*    <span className="text-sm text-slate-700">{feature}</span>*/}
+                        {/*  </label>*/}
+                        {/*))}*/}
+                      {/* </div>
+                    </div> */}
+
+                    <div className="flex space-x-4 pt-4">
                       <button
                         type="submit"
-                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200"
+                        className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium"
                       >
                         Add Vehicle
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowAddForm(false)}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors duration-200"
+                        className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium"
                       >
                         Cancel
                       </button>
@@ -185,19 +319,140 @@ export default function FranchiseManagement() {
               {/* Vehicle List */}
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {vehicles.map((vehicle) => (
-                  <div key={vehicle.id} className="bg-white/80 rounded-xl p-6 shadow-lg border border-white/20">
+                  <div key={vehicle.bikeId} className="bg-white/80 rounded-xl p-6 shadow-lg border border-white/20">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-bold text-slate-800">{vehicle.type}</h3>
                       <div className="flex space-x-2">
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200">
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteVehicle(vehicle.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {editId === vehicle.bikeId ? (
+                          <form onSubmit={handleEditVehicle} className="space-y-3">
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Vehicle Type</label>
+                              <select
+                                value={editData.type || ""}
+                                onChange={(e) => setEditData({ ...editData, type: e.target.value })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:border-indigo-500 focus:outline-none"
+                              >
+                                <option value="eBike">eBike</option>
+                                <option value="Gyroscooter">Gyroscooter</option>
+                                <option value="Segway">Segway</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Model Name</label>
+                              <input
+                                type="text"
+                                value={editData.model || ""}
+                                onChange={(e) => setEditData({ ...editData, model: e.target.value })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:border-indigo-500 focus:outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Access Code</label>
+                              <input
+                                type="text"
+                                value={editData.accessCode || ""}
+                                onChange={(e) => setEditData({ ...editData, accessCode: e.target.value })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:border-indigo-500 focus:outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Battery Life</label>
+                              <input
+                                type="text"
+                                value={editData.batteryLife || ""}
+                                onChange={(e) => setEditData({ ...editData, batteryLife: e.target.value })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:border-indigo-500 focus:outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Hourly Rate ($)</label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={editData.hourlyRate || ""}
+                                onChange={(e) =>
+                                  setEditData({ ...editData, hourlyRate: Number.parseFloat(e.target.value) })
+                                }
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:border-indigo-500 focus:outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Discount</label>
+                              <input
+                                type="text"
+                                value={editData.discount || ""}
+                                onChange={(e) => setEditData({ ...editData, discount: e.target.value })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:border-indigo-500 focus:outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-2">Features</label>
+                              <div className="grid grid-cols-1 gap-2">
+                                {["Height Adjustment", "Bluetooth", "GPS", "Shock Absorbers"].map((feature) => (
+                                  <label key={feature} className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={(editData.features || []).includes(feature)}
+                                      onChange={(e) => {
+                                        const currentFeatures = editData.features || []
+                                        if (e.target.checked) {
+                                          setEditData({ ...editData, features: [...currentFeatures, feature] })
+                                        } else {
+                                          setEditData({
+                                            ...editData,
+                                            features: currentFeatures.filter((f) => f !== feature),
+                                          })
+                                        }
+                                      }}
+                                      className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                    />
+                                    <span className="text-sm text-slate-700">{feature}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex space-x-2 pt-2">
+                              <button
+                                type="submit"
+                                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
+                              >
+                                Save Changes
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditId(null)}
+                                className="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition-colors duration-200 font-medium"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => {
+                                setEditId(vehicle.bikeId)
+                                setEditData(vehicle)
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteVehicle(vehicle.bikeId)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -273,7 +528,10 @@ export default function FranchiseManagement() {
                 <h3 className="text-lg font-semibold text-slate-800 mb-4">Vehicle Utilization</h3>
                 <div className="space-y-4">
                   {vehicles.map((vehicle) => (
-                    <div key={vehicle.id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-lg">
+                    <div
+                      key={vehicle.bikeId}
+                      className="flex items-center justify-between p-4 bg-slate-50/50 rounded-lg"
+                    >
                       <div>
                         <span className="font-semibold">
                           {vehicle.type} - {vehicle.model}

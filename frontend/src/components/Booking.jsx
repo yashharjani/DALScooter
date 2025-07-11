@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Calendar, Clock, MapPin, Bike } from "lucide-react"
 
@@ -11,12 +11,23 @@ export default function Booking() {
   const [endTime, setEndTime] = useState("")
   const [location, setLocation] = useState("")
   const [message, setMessage] = useState("")
+  const [vehicles, setVehicles] = useState([]);
+  const API_BASE = import.meta.env.VITE_BIKE_CRUD_API;
 
-  const vehicles = [
-    { id: "gyroscooter", name: "Gyroscooter", price: 15, available: 8 },
-    { id: "ebike", name: "eBike", price: 12, available: 12 },
-    { id: "segway", name: "Segway", price: 18, available: 5 },
-  ]
+  useEffect(() => {
+    const fetchBikes = async () => {
+    const res = await fetch(`${API_BASE}/bikes`);
+    const data = await res.json();
+    setVehicles(data);
+  };
+    fetchBikes();
+  }, []);
+
+//   const vehicles = [
+//     { id: "gyroscooter", name: "Gyroscooter", price: 15, available: 8 },
+//     { id: "ebike", name: "eBike", price: 12, available: 12 },
+//     { id: "segway", name: "Segway", price: 18, available: 5 },
+//   ]
 
   const locations = [
     "Halifax Downtown",
@@ -60,7 +71,7 @@ export default function Booking() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {vehicles.map((vehicle) => (
                   <div
-                    key={vehicle.id}
+                    key={vehicle.bikeId}
                     className={`p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                       selectedVehicle === vehicle.id
                         ? "border-indigo-500 bg-indigo-50/50"

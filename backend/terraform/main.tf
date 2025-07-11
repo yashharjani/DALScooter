@@ -24,6 +24,14 @@ module "amplify_deploy" {
   auth_user_pool_client_id  = module.auth_module.user_pool_client_id
 }
 
+# Bike Module (Admin & Guest CRUD access)
+module "bike_module" {
+  source                     = "../bike-module/terraform"
+  aws_region                = var.aws_region
+  cognito_user_pool_id      = module.auth_module.user_pool_id
+  cognito_user_pool_client_id = module.auth_module.user_pool_client_id
+}
+
 # # Virtual Assistant Module (Placeholder for GCP Dialogflow)
 # module "virtual_assistant" {
 #   source            = "../backend/virtual-assistant/terraform"

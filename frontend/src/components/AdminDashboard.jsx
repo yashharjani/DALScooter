@@ -31,7 +31,8 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("userEmail")
-    navigate("/login")
+    localStorage.removeItem("userGroup")
+    navigate("/")
   }
 
   const adminQuickLinks = [

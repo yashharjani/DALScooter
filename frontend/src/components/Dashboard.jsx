@@ -1,16 +1,28 @@
 "use client"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Calendar, Star, LogOut, Bike, MessageCircle, User } from "lucide-react"
 
 export default function Dashboard() {
   const email = localStorage.getItem("userEmail")
   const navigate = useNavigate()
+  const [vehicles, setVehicles] = useState([]);
+  const API_BASE = import.meta.env.VITE_BIKE_CRUD_API;
+
+  useEffect(() => {
+    const fetchBikes = async () => {
+      const res = await fetch(`${API_BASE}/bikes`);
+      const data = await res.json();
+      setVehicles(data);
+    };
+    fetchBikes();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("userEmail")
     localStorage.removeItem("userGroup")
-    navigate("/login")
+    navigate("/")
   }
 
   // Only user-accessible actions - NO admin routes
@@ -147,30 +159,21 @@ export default function Dashboard() {
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
             <h3 className="text-2xl font-bold text-slate-800 mb-6">Available Vehicles</h3>
             <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-blue-50/50 rounded-lg border border-blue-200/30">
-                <div>
-                  <h4 className="font-semibold text-slate-800">eBike</h4>
-                  <p className="text-sm text-slate-600">Electric bicycle with pedal assist</p>
-                  <p className="text-xs text-slate-500 mt-1">Perfect for campus and city rides</p>
+              {vehicles.map((bike) => (
+                <div key={bike.bikeId} className="flex justify-between items-center p-4 rounded-lg border bg-white/60 border-slate-200">
+                  <div>
+                    <h4 className="font-semibold text-slate-800">{bike.type} - {bike.model}</h4>
+                    <p className="text-sm text-slate-600">{bike.batteryLife}</p>
+                    <p className="text-xs text-slate-500 mt-1 text-slate-600">Hourly Rate: ${bike.hourlyRate}</p>
+                  </div>
+                  <Link
+                    to="/booking"
+                    className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg transition"
+                  >
+                    Book
+                  </Link>
                 </div>
-                <span className="text-blue-600 font-bold text-xl">$12/hr</span>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-lg border border-green-200/30">
-                <div>
-                  <h4 className="font-semibold text-slate-800">Gyroscooter</h4>
-                  <p className="text-sm text-slate-600">Self-balancing electric scooter</p>
-                  <p className="text-xs text-slate-500 mt-1">Easy to learn, fun to ride</p>
-                </div>
-                <span className="text-green-600 font-bold text-xl">$15/hr</span>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-purple-50/50 rounded-lg border border-purple-200/30">
-                <div>
-                  <h4 className="font-semibold text-slate-800">Segway</h4>
-                  <p className="text-sm text-slate-600">Two-wheeled personal transporter</p>
-                  <p className="text-xs text-slate-500 mt-1">Premium experience with advanced features</p>
-                </div>
-                <span className="text-purple-600 font-bold text-xl">$18/hr</span>
-              </div>
+              ))}
             </div>
           </div>
         </div>
