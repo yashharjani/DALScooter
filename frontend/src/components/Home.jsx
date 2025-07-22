@@ -12,17 +12,148 @@ import {
   ThumbsDown,
   Minus,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Zap,
   Shield,
   Clock,
+  MessageSquare,
 } from "lucide-react"
+
+const VehicleTypeCarousel = ({ type, bikes }) => {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const itemsPerPage = 3
+  const totalPages = Math.ceil(bikes.length / itemsPerPage)
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % totalPages)
+  }
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + totalPages) % totalPages)
+  }
+
+  const getCurrentPageItems = () => {
+    const startIndex = currentIndex * itemsPerPage
+    return bikes.slice(startIndex, startIndex + itemsPerPage)
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h3 className="text-3xl font-bold text-gray-900">{type}s</h3>
+        {bikes.length > itemsPerPage && (
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={prevSlide}
+              className="p-2 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 border border-gray-200 hover:border-indigo-300"
+              disabled={totalPages <= 1}
+            >
+              <ChevronLeft className="h-5 w-5 text-gray-600 hover:text-indigo-600" />
+            </button>
+            <span className="text-sm text-gray-500 px-3">
+              {currentIndex + 1} of {totalPages}
+            </span>
+            <button
+              onClick={nextSlide}
+              className="p-2 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 border border-gray-200 hover:border-indigo-300"
+              disabled={totalPages <= 1}
+            >
+              <ChevronRight className="h-5 w-5 text-gray-600 hover:text-indigo-600" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {getCurrentPageItems().map((bike) => (
+            <div
+              key={bike.bikeId}
+              className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xl font-bold text-gray-900">{bike.model}</h4>
+                  <div className="flex items-center space-x-1 bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                    <Battery className="h-4 w-4" />
+                    <span className="text-sm font-semibold">{bike.batteryLife}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center mb-6">
+                  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-xl">
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-5 w-5" />
+                      <span className="text-2xl font-bold">{bike.hourlyRate}</span>
+                      <span className="text-sm">/hr</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Access Code:</span>
+                    <span className="font-mono bg-gray-100 px-2 py-1 rounded">{bike.accessCode}</span>
+                  </div>
+
+                  {bike.discount && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Discount:</span>
+                      <span className="font-semibold text-orange-600">{bike.discount}</span>
+                    </div>
+                  )}
+                </div>
+
+                {bike.features && bike.features.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600 mb-2">Features:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {bike.features.map((feature, index) => (
+                        <span
+                          key={index}
+                          className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Dots indicator for mobile */}
+        {bikes.length > itemsPerPage && (
+          <div className="flex justify-center mt-6 space-x-2 md:hidden">
+            {Array.from({ length: totalPages }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                  index === currentIndex ? "bg-indigo-600 w-6" : "bg-gray-300"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function Home() {
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
   const [showChatbot, setShowChatbot] = useState(false)
+  const [feedbacks, setFeedbacks] = useState([])
+  const [feedbackLoading, setFeedbackLoading] = useState(true)
 
   const API_BASE = import.meta.env.VITE_BIKE_CRUD_API
+
+  const FEEDBACK_API = import.meta.env.VITE_FEEDBACK_API || import.meta.env.VITE_BIKE_CRUD_API
 
   const fetchVehicles = async () => {
     try {
@@ -36,45 +167,31 @@ export default function Home() {
     }
   }
 
+  const fetchFeedbacks = async () => {
+    try {
+      const response = await fetch(`${FEEDBACK_API}/get-feedback`)
+      if (response.ok) {
+        const data = await response.json()
+        // Get latest 4 feedbacks for homepage display
+        const latestFeedbacks = Array.isArray(data)
+          ? data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 4)
+          : []
+        setFeedbacks(latestFeedbacks)
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+    } catch (error) {
+      console.error("Error fetching feedbacks:", error)
+      setFeedbacks([])
+    } finally {
+      setFeedbackLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchVehicles()
+    fetchFeedbacks()
   }, [])
-
-  // Sample feedback data (since backend is not ready)
-  const sampleFeedback = [
-    {
-      id: 1,
-      text: "Amazing experience! The eBike was in perfect condition and so easy to use.",
-      rating: 5,
-      bikeType: "eBike",
-      sentiment: "positive",
-      userName: "Sarah M.",
-    },
-    {
-      id: 2,
-      text: "Great service, but the battery could last longer on the Gyroscooter.",
-      rating: 4,
-      bikeType: "Gyroscooter",
-      sentiment: "neutral",
-      userName: "Mike R.",
-    },
-    {
-      id: 3,
-      text: "Segway was fantastic! Perfect for campus tours. Highly recommend!",
-      rating: 5,
-      bikeType: "Segway",
-      sentiment: "positive",
-      userName: "Emma L.",
-    },
-    {
-      id: 4,
-      text: "Good overall experience. The booking process was smooth and efficient.",
-      rating: 4,
-      bikeType: "eBike",
-      sentiment: "positive",
-      userName: "John D.",
-    },
-  ]
 
   const scrollToVehicles = () => {
     document.getElementById("vehicles-section")?.scrollIntoView({
@@ -204,67 +321,7 @@ export default function Home() {
           ) : (
             <div className="space-y-16">
               {Object.entries(groupedVehicles).map(([type, bikes]) => (
-                <div key={type} className="space-y-8">
-                  <h3 className="text-3xl font-bold text-gray-900 text-center">{type}s</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {bikes.map((bike) => (
-                      <div
-                        key={bike.bikeId}
-                        className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden"
-                      >
-                        <div className="p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-xl font-bold text-gray-900">{bike.model}</h4>
-                            <div className="flex items-center space-x-1 bg-green-100 text-green-800 px-3 py-1 rounded-full">
-                              <Battery className="h-4 w-4" />
-                              <span className="text-sm font-semibold">Battery : {bike.batteryLife}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-center mb-6">
-                            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-xl">
-                              <div className="flex items-center space-x-2">
-                                <DollarSign className="h-5 w-5" />
-                                <span className="text-2xl font-bold">{bike.hourlyRate}</span>
-                                <span className="text-sm">/hr</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600">Access Code:</span>
-                              <span className="font-mono bg-gray-100 px-2 py-1 rounded">{bike.accessCode}</span>
-                            </div>
-
-                            {bike.discount && (
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-600">Discount:</span>
-                                <span className="font-semibold text-orange-600">{bike.discount}%</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {bike.features && bike.features.length > 0 && (
-                            <div className="mt-4">
-                              <p className="text-sm text-gray-600 mb-2">Features:</p>
-                              <div className="flex flex-wrap gap-2">
-                                {bike.features.map((feature, index) => (
-                                  <span
-                                    key={index}
-                                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium"
-                                  >
-                                    {feature}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <VehicleTypeCarousel key={type} type={type} bikes={bikes} />
               ))}
             </div>
           )}
@@ -335,38 +392,70 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {sampleFeedback.map((feedback) => (
-              <div
-                key={feedback.id}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 p-6"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${i < feedback.rating ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-                      />
-                    ))}
-                  </div>
-                  <div
-                    className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getSentimentColor(feedback.sentiment)}`}
-                  >
-                    {getSentimentIcon(feedback.sentiment)}
-                    <span className="capitalize">{feedback.sentiment}</span>
-                  </div>
-                </div>
-
-                <p className="text-gray-700 mb-4 leading-relaxed">"{feedback.text}"</p>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-900">{feedback.userName}</span>
-                  <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs font-medium">
-                    {feedback.bikeType}
-                  </span>
-                </div>
+            {feedbackLoading ? (
+              <div className="col-span-full text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <p className="mt-2 text-gray-600">Loading customer reviews...</p>
               </div>
-            ))}
+            ) : feedbacks.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-600">Unable to load customer reviews at this time.</p>
+                <p className="text-gray-500 text-sm mt-1">Please check back later.</p>
+              </div>
+            ) : (
+              feedbacks.map((feedback, index) => (
+                <div
+                  key={feedback.feedbackId || feedback.id || index}
+                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 p-6"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${i < (feedback.rating || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+                        />
+                      ))}
+                    </div>
+                    <div
+                      className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getSentimentColor(feedback.sentiment)}`}
+                    >
+                      {getSentimentIcon(feedback.sentiment)}
+                      <span className="capitalize">{feedback.sentiment || "neutral"}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-700 mb-4 leading-relaxed">"{feedback.comment || feedback.text}"</p>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {feedback.userEmail ? feedback.userEmail.split("@")[0] : feedback.userName || "Anonymous"}
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs font-medium">
+                        {feedback.model || feedback.bikeType}
+                      </span>
+                      {feedback.type && (
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                          {feedback.type}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Add link to view all feedback */}
+          <div className="text-center mt-8">
+            <Link
+              to="/public-feedback"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+            >
+              View All Customer Reviews
+              <MessageSquare className="ml-2 h-5 w-5" />
+            </Link>
           </div>
         </div>
       </section>

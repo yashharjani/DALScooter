@@ -1,22 +1,37 @@
 "use client"
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Calendar, Star, LogOut, Bike, MessageCircle, User } from "lucide-react"
+import { Calendar, Star, LogOut, Bike, MessageCircle, User, Eye } from "lucide-react"
 
 export default function Dashboard() {
   const email = localStorage.getItem("userEmail")
   const navigate = useNavigate()
-  const [vehicles, setVehicles] = useState([]);
-  const API_BASE = import.meta.env.VITE_BIKE_CRUD_API;
+  const [vehicles, setVehicles] = useState([])
+  const [randomVehicles, setRandomVehicles] = useState([])
+  const [showWelcome, setShowWelcome] = useState(true)
+  const API_BASE = import.meta.env.VITE_BIKE_CRUD_API
 
   useEffect(() => {
     const fetchBikes = async () => {
-      const res = await fetch(`${API_BASE}/bikes`);
-      const data = await res.json();
-      setVehicles(data);
-    };
-    fetchBikes();
-  }, []);
+      const res = await fetch(`${API_BASE}/bikes`)
+      const data = await res.json()
+      setVehicles(data)
+
+      // Get 3 random vehicles
+      const shuffled = [...data].sort(() => 0.5 - Math.random())
+      setRandomVehicles(shuffled.slice(0, 3))
+    }
+    fetchBikes()
+  }, [])
+
+  // Auto-hide welcome notification after 10 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowWelcome(false)
+    }, 10000)
+
+    return () => clearTimeout(timer)
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem("token")
@@ -64,13 +79,21 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Notification Banner */}
-      <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert">
-        <p className="font-bold">Welcome!</p>
-        <p>
-          You have successfully signed in as a Registered User. You will receive notifications for important updates.
-        </p>
-      </div>
+      {/* Notification Banner - Auto-hide after 10 seconds */}
+      {showWelcome && (
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 relative" role="alert">
+          <button
+            onClick={() => setShowWelcome(false)}
+            className="absolute top-2 right-2 text-green-600 hover:text-green-800 text-xl font-bold"
+          >
+            ×
+          </button>
+          <p className="font-bold">Welcome!</p>
+          <p>
+            You have successfully signed in as a Registered User. You will receive notifications for important updates.
+          </p>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Welcome Section */}
@@ -159,10 +182,15 @@ export default function Dashboard() {
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
             <h3 className="text-2xl font-bold text-slate-800 mb-6">Available Vehicles</h3>
             <div className="space-y-6">
-              {vehicles.map((bike) => (
-                <div key={bike.bikeId} className="flex justify-between items-center p-4 rounded-lg border bg-white/60 border-slate-200">
+              {randomVehicles.map((bike) => (
+                <div
+                  key={bike.bikeId}
+                  className="flex justify-between items-center p-4 rounded-lg border bg-white/60 border-slate-200"
+                >
                   <div>
-                    <h4 className="font-semibold text-slate-800">{bike.type} - {bike.model}</h4>
+                    <h4 className="font-semibold text-slate-800">
+                      {bike.type} - {bike.model}
+                    </h4>
                     <p className="text-sm text-slate-600">{bike.batteryLife}</p>
                     <p className="text-xs text-slate-500 mt-1 text-slate-600">Hourly Rate: ${bike.hourlyRate}</p>
                   </div>
@@ -174,6 +202,17 @@ export default function Dashboard() {
                   </Link>
                 </div>
               ))}
+
+              {/* View All Vehicles Button */}
+              <div className="pt-4 border-t border-slate-200">
+                <Link
+                  to="/vehicles"
+                  className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-slate-600 to-slate-700 text-white font-semibold px-6 py-3 rounded-lg hover:from-slate-700 hover:to-slate-800 transition-all duration-200 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+                >
+                  <Eye className="h-5 w-5" />
+                  <span>View All Vehicles</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

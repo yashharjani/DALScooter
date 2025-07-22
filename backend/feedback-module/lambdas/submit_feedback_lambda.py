@@ -36,11 +36,13 @@ def lambda_handler(event, context):
     try:
         logger.info(f"Incoming event: {json.dumps(event)}")
         body = json.loads(event['body'])
+        logger.info(f"Body: {body}")
 
         bike_id = body['bikeId']
         model = body['model']
-        user_email = body['userEmail']
+        user_email = event["requestContext"]["authorizer"]["claims"]["email"]
         comment = body['comment']
+        vehicle_type = body['type']
         rating = body.get('rating', None)
 
         sentiment = analyze_sentiment(comment)
@@ -49,6 +51,7 @@ def lambda_handler(event, context):
             'feedbackId': str(uuid.uuid4()),
             'bikeId': bike_id,
             'model': model,
+            'type': vehicle_type,
             'userEmail': user_email,
             'comment': comment,
             'sentiment': sentiment,

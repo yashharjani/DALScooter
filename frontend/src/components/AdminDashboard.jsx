@@ -19,6 +19,7 @@ import {
 
 export default function AdminDashboard() {
   const [adminEmail, setAdminEmail] = useState("")
+  const [showWelcome, setShowWelcome] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -26,6 +27,15 @@ export default function AdminDashboard() {
     if (email) {
       setAdminEmail(email)
     }
+  }, [])
+
+  // Auto-hide welcome notification after 10 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowWelcome(false)
+    }, 10000)
+
+    return () => clearTimeout(timer)
   }, [])
 
   const handleLogout = () => {
@@ -136,13 +146,21 @@ export default function AdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Notification Banner */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl mb-6 shadow-lg">
-          <p className="font-semibold">✅ Welcome! You have successfully signed in as a Franchise Operator.</p>
-          <p className="text-green-100 text-sm">
-            You have administrative privileges and multi-factor authentication is enabled.
-          </p>
-        </div>
+        {/* Notification Banner - Auto-hide after 10 seconds */}
+        {showWelcome && (
+          <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl mb-6 shadow-lg relative">
+            <button
+              onClick={() => setShowWelcome(false)}
+              className="absolute top-2 right-2 text-green-100 hover:text-white text-xl font-bold"
+            >
+              ×
+            </button>
+            <p className="font-semibold">✅ Welcome! You have successfully signed in as a Franchise Operator.</p>
+            <p className="text-green-100 text-sm">
+              You have administrative privileges and multi-factor authentication is enabled.
+            </p>
+          </div>
+        )}
 
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl shadow-2xl p-8 mb-8 border border-slate-600">
