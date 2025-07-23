@@ -25,6 +25,18 @@ data "archive_file" "store_qa_lambda_zip" {
   output_path = "${path.module}/../lambdas/store_qa_lambda.zip"
 }
 
+data "archive_file" "registration_notification_lambda_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambdas/registration_notification_lambda.py"
+  output_path = "${path.module}/../lambdas/registration_notification_lambda.zip"
+}
+
+data "archive_file" "login_notification_lambda_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambdas/login_notification_lambda.py"
+  output_path = "${path.module}/../lambdas/login_notification_lambda.zip"
+}
+
 # DynamoDB Table for User Details
 resource "aws_dynamodb_table" "dalscooter_users" {
   name           = "DALScooterUsers"
@@ -138,6 +150,35 @@ resource "aws_lambda_function" "caesar_cipher_lambda" {
   depends_on = [data.archive_file.caesar_cipher_lambda_zip]
 }
 
+resource "aws_lambda_function" "registration_notification_lambda" {
+  function_name = "DALScooterRegistrationNotificationLambda"
+  filename      = data.archive_file.registration_notification_lambda_zip.output_path
+  handler       = "registration_notification_lambda.handler"
+  runtime       = "python3.11"
+  role          = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
+
+  environment {
+    variables = {
+      SNS_TOPIC_ARN = aws_sns_topic.authentication_sns_topic.arn
+    }
+  }
+}
+
+resource "aws_lambda_function" "login_notification_lambda" {
+  function_name = "DALScooterLoginNotificationLambda"
+  filename      = data.archive_file.login_notification_lambda_zip.output_path
+  handler       = "login_notification_lambda.handler"
+  runtime       = "python3.11"
+  role          = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
+
+  environment {
+    variables = {
+      SNS_TOPIC_ARN = aws_sns_topic.authentication_sns_topic.arn
+      USER_POOL_ID  = aws_cognito_user_pool.dalscooter_user_pool.id
+    }
+  }
+}
+
 resource "aws_lambda_permission" "allow_cognito_custom_auth" {
   statement_id  = "AllowExecutionFromCognitoCustomAuth"
   action        = "lambda:InvokeFunction"
@@ -193,7 +234,8 @@ resource "aws_lambda_function" "store_qa_lambda" {
   environment {
     variables = {
       DYNAMODB_TABLE = aws_dynamodb_table.dalscooter_users.name
-      # SNS_TOPIC_ARN  = aws_sns_topic.authentication_sns_topic.arn
+      REGISTRATION_QUEUE_URL = aws_sqs_queue.registration_email_queue.id
+      SNS_TOPIC_ARN         = aws_sns_topic.authentication_sns_topic.arn
     }
   }
 
@@ -222,21 +264,46 @@ resource "aws_lambda_permission" "store_qa_api_permission" {
   source_arn    = "${aws_apigatewayv2_api.dalscooter_http_api.execution_arn}/*/*"
 }
 
-# resource "aws_sns_topic" "authentication_sns_topic" {
-#   name = "authentication_sns_topic"
-# }
+resource "aws_sns_topic" "authentication_sns_topic" {
+  name = "authentication_sns_topic"
+}
 
-# resource "aws_ssm_parameter" "authentication_sns_topic_arn" {
-#   name  = "/dalscooter/authentication_sns_topic_arn"
-#   type  = "String"
-#   value = aws_sns_topic.authentication_sns_topic.arn
-# }
+resource "aws_sqs_queue" "registration_email_queue" {
+  name                      = "registration_email_queue"
+  delay_seconds             = 90
+  message_retention_seconds = 300
+}
 
-# # Add inline Lambda permission blocks like this if needed
-# resource "aws_lambda_permission" "allow_sns_store_qa" {
-#   statement_id  = "AllowExecutionFromSNSStoreQA"
-#   action        = "lambda:InvokeFunction"
-#   function_name = aws_lambda_function.store_qa_lambda.function_name
-#   principal     = "sns.amazonaws.com"
-#   source_arn    = aws_sns_topic.authentication_sns_topic.arn
-# }
+resource "aws_sns_topic_subscription" "registration_sqs_sub" {
+  topic_arn = aws_sns_topic.authentication_sns_topic.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.registration_email_queue.arn
+}
+
+resource "aws_sqs_queue_policy" "allow_sns_to_sqs" {
+  queue_url = aws_sqs_queue.registration_email_queue.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = "*"
+        Action = "sqs:SendMessage"
+        Resource = aws_sqs_queue.registration_email_queue.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_sns_topic.authentication_sns_topic.arn
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_event_source_mapping" "trigger_lambda_from_sqs" {
+  event_source_arn = aws_sqs_queue.registration_email_queue.arn
+  function_name    = aws_lambda_function.registration_notification_lambda.function_name
+  batch_size       = 1
+  enabled          = true
+}

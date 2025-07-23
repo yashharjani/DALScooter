@@ -38,6 +38,7 @@ export default function Register() {
             userId: result.userSub,
             question,
             answer,
+            email,
           }),
         })
         // navigate("/confirm")

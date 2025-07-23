@@ -18,7 +18,7 @@ export default function Feedback() {
   const [submitting, setSubmitting] = useState(false)
   const [filterModel, setFilterModel] = useState("")
 
-  const FEEDBACK_API = import.meta.env.VITE_FEEDBACK_API || import.meta.env.VITE_BIKE_CRUD_API
+  const FEEDBACK_API = import.meta.env.VITE_FEEDBACK_API
   const API_BASE = import.meta.env.VITE_BIKE_CRUD_API
   const userGroups = getUserGroup()
   const canSubmitFeedback = isRegisteredUser()

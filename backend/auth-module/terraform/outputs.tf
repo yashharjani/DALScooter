@@ -13,3 +13,7 @@ output "dynamodb_table_name" {
 output "api_gateway_endpoint" {
   value = aws_apigatewayv2_api.dalscooter_http_api.api_endpoint
 }
+
+output "authentication_sns_topic_arn" {
+  value = aws_sns_topic.authentication_sns_topic.arn
+}

@@ -38,6 +38,7 @@ EOT
     VITE_COGNITO_USER_POOL_CLIENT = var.auth_user_pool_client_id
     VITE_AWS_REGION               = var.aws_region
     VITE_BIKE_CRUD_API            = var.bike_crud_api
+    VITE_FEEDBACK_API             = var.feedback_api
   }
 }
 

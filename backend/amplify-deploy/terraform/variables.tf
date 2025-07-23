@@ -28,3 +28,8 @@ variable "bike_crud_api" {
   description = "Bike CRUD API"
   type        = string
 }
+
+variable "feedback_api" {
+  description = "Feedback CRUD API"
+  type        = string
+}
