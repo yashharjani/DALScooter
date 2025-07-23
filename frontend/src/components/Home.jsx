@@ -153,7 +153,7 @@ export default function Home() {
 
   const API_BASE = import.meta.env.VITE_BIKE_CRUD_API
 
-  const FEEDBACK_API = import.meta.env.VITE_FEEDBACK_API || import.meta.env.VITE_BIKE_CRUD_API
+  const FEEDBACK_API = import.meta.env.VITE_FEEDBACK_API
 
   const fetchVehicles = async () => {
     try {
