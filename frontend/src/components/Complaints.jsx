@@ -388,6 +388,9 @@ export default function Complaints() {
                     <div>
                       <h3 className="text-xl font-bold text-slate-800">Complaint Details</h3>
                       <p className="text-slate-600">Booking: {selectedComplaint.bookingRef}</p>
+                      {isFranchise && selectedComplaint.userEmail && (
+                        <p className="text-sm text-slate-500">From: {selectedComplaint.userEmail}</p>
+                      )}
                     </div>
                     <div
                       className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedComplaint.status)}`}

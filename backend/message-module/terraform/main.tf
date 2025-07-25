@@ -117,6 +117,7 @@ resource "aws_lambda_function" "get_single_complaint" {
   environment {
     variables = {
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.complaint_logs.name
+      USER_POOL_ID        = var.cognito_user_pool_id
     }
   }
 }

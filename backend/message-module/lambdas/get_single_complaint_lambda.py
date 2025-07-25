@@ -9,6 +9,8 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.environ["DYNAMODB_TABLE_NAME"])
 
+cognito = boto3.client("cognito-idp")
+
 def lambda_handler(event, context):
     logger.info("Event: %s", json.dumps(event))
 
@@ -31,6 +33,21 @@ def lambda_handler(event, context):
         if not (user_id == item["userId"] or user_id == item["assignedFranchiseId"]):
             return {"statusCode": 403, "body": json.dumps({"error": "Unauthorized to view this complaint."})}
 
+        # If the requester is the assigned franchise, fetch user email
+        if is_franchise and user_id == item["assignedFranchiseId"]:
+            try:
+                user_info = cognito.admin_get_user(
+                    UserPoolId=os.environ["USER_POOL_ID"],
+                    Username=item["userId"]
+                )
+                user_email = next(
+                    (attr["Value"] for attr in user_info["UserAttributes"] if attr["Name"] == "email"),
+                    None
+                )
+                item["userEmail"] = user_email
+            except Exception as e:
+                logger.warning("Unable to fetch user email: %s", str(e))
+        
         return {
             "statusCode": 200,
             "body": json.dumps(item)
