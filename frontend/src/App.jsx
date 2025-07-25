@@ -12,6 +12,7 @@ import AdminAnalytics from "./components/AdminAnalytics"
 import VirtualAssistant from "./components/VirtualAssistant"
 import AdminDashboard from "./components/AdminDashboard"
 import Vehicles from "./components/Vehicles"
+import Complaints from "./components/Complaints"
 import { getUserGroup } from "./utils/auth"
 
 export default function App() {
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/franchise" element={<FranchiseManagement />} />
         <Route path="/admin" element={<AdminAnalytics />} />
+        <Route path="/complaints" element={<Complaints />} />
       </Routes>
       {!hideVirtualAssistant && <VirtualAssistant />}
     </div>

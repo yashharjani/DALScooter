@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Calendar, Star, LogOut, Bike, MessageCircle, User, Eye } from "lucide-react"
+import { Calendar, Star, LogOut, Bike, MessageCircle, User, Eye, MessageSquare } from "lucide-react"
 
 export default function Dashboard() {
   const email = localStorage.getItem("userEmail")
@@ -68,13 +68,22 @@ export default function Dashboard() {
               <Bike className="h-8 w-8 text-indigo-600" />
               <h1 className="text-2xl font-bold text-slate-800">DALScooter</h1>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
-            </button>
+            <div className="flex items-center space-x-3">
+              <Link
+                to="/complaints"
+                className="flex items-center space-x-2 px-5 py-2.5 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Complaints</span>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

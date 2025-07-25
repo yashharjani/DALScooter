@@ -39,6 +39,7 @@ EOT
     VITE_AWS_REGION               = var.aws_region
     VITE_BIKE_CRUD_API            = var.bike_crud_api
     VITE_FEEDBACK_API             = var.feedback_api
+    VITE_COMPLAINT_API            = var.complaint_api
   }
 }
 

@@ -33,3 +33,8 @@ variable "feedback_api" {
   description = "Feedback CRUD API"
   type        = string
 }
+
+variable "complaint_api" {
+  description = "Complaint CRUD API"
+  type        = string
+}

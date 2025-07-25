@@ -270,7 +270,7 @@ resource "aws_sns_topic" "authentication_sns_topic" {
 
 resource "aws_sqs_queue" "registration_email_queue" {
   name                      = "registration_email_queue"
-  delay_seconds             = 90
+  delay_seconds             = 60
   message_retention_seconds = 300
 }
 

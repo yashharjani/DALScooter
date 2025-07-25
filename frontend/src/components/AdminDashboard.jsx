@@ -134,13 +134,22 @@ export default function AdminDashboard() {
                 <p className="text-slate-300 text-lg">DALScooter Management Portal</p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center space-x-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              <LogOut className="h-5 w-5" />
-              <span className="font-semibold">Logout</span>
-            </button>
+            <div className="flex items-center space-x-3">
+              <Link
+                to="/complaints"
+                className="flex items-center space-x-2 px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+              >
+                <MessageSquare className="h-5 w-5" />
+                <span>Complaints</span>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
